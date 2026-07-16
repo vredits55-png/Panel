@@ -1,0 +1,13 @@
+node_modules/
+database.db
+database.db-journal
+servers/
+temp/
+backups/
+uploads/
+.env
+.server.pid
+.server.starttime
+logs/
+*.log
+.vscode/
