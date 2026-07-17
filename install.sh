@@ -87,7 +87,7 @@ EOT
 echo -e "${GREEN}✓ Configuration saved in .env${NC}"
 
 # Run hardware autodetector to configure database with system specs
-node autodetect.js
+node autodetect.js < /dev/tty
 
 # Step 7: Set up PM2 Process Manager
 echo -e "\n${BLUE}[7/7] Configuring PM2 Process Manager...${NC}"
