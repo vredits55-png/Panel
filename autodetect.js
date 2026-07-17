@@ -51,27 +51,60 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-rl.question('Enter resource allocation percentage for panel (1-100, default: 90%): ', (answer) => {
-    let percent = parseInt(answer.trim());
-    if (answer.trim() === '') {
-        percent = 90;
-    }
-    if (isNaN(percent) || percent < 1 || percent > 100) {
-        console.log('⚠️  Invalid input. Using default of 90%.');
-        percent = 90;
-    }
+function askQuestion(query, validator, defaultValue) {
+    return new Promise((resolve) => {
+        const ask = () => {
+            rl.question(query, (answer) => {
+                const trimmed = answer.trim();
+                if (trimmed === '') {
+                    resolve(defaultValue);
+                    return;
+                }
+                const value = parseInt(trimmed, 10);
+                if (validator(value)) {
+                    resolve(value);
+                } else {
+                    console.log('⚠️  Invalid value. Please enter a value within the specified range.');
+                    ask();
+                }
+            });
+        };
+        ask();
+    });
+}
 
-    const ratio = percent / 100;
-    const defaultRam = Math.floor(totalRamMB * ratio);
-    const defaultCpu = Math.max(1, Math.floor(cpuCores * ratio));
-    const defaultDisk = Math.floor(totalDiskMB * ratio);
+async function startDetection() {
+    // 90% default fallbacks
+    const defaultCpu = Math.max(1, Math.floor(cpuCores * 0.9));
+    const defaultRam = Math.floor(totalRamMB * 0.9);
+    const defaultDisk = Math.floor(totalDiskMB * 0.9);
+
+    console.log('Specify resource allocations for the panel below (Press Enter for 90% default):');
+    
+    const allocatedCpu = await askQuestion(
+        `➡️  CPU Cores to allocate (1-${cpuCores}, default: ${defaultCpu}): `,
+        val => !isNaN(val) && val >= 1 && val <= cpuCores,
+        defaultCpu
+    );
+
+    const allocatedRam = await askQuestion(
+        `➡️  RAM to allocate in MB (512-${totalRamMB}, default: ${defaultRam}): `,
+        val => !isNaN(val) && val >= 512 && val <= totalRamMB,
+        defaultRam
+    );
+
+    const allocatedDisk = await askQuestion(
+        `➡️  Disk Space to allocate in MB (1024-${totalDiskMB}, default: ${defaultDisk}): `,
+        val => !isNaN(val) && val >= 1024 && val <= totalDiskMB,
+        defaultDisk
+    );
 
     console.log('\n=========================================================');
-    console.log(`🎯 Applying ${percent}% Allocation Config`);
+    console.log('🎯 Applying Custom Allocation Config');
     console.log('=========================================================');
-    console.log(`🖥  Allocated CPU Cores:  ${defaultCpu} (Host total: ${cpuCores})`);
-    console.log(`💾 Allocated RAM:        ${Math.round(defaultRam / 1024)} GB (${defaultRam} MB)`);
-    console.log(`📁 Allocated Disk Space: ${Math.round(defaultDisk / 1024)} GB (${defaultDisk} MB)`);
+    console.log(`🖥  Allocated CPU Cores:  ${allocatedCpu} (Host total: ${cpuCores})`);
+    console.log(`💾 Allocated RAM:        ${Math.round(allocatedRam / 1024)} GB (${allocatedRam} MB)`);
+    console.log(`📁 Allocated Disk Space: ${Math.round(allocatedDisk / 1024)} GB (${allocatedDisk} MB)`);
     console.log('=========================================================');
 
     db.serialize(() => {
@@ -86,10 +119,9 @@ rl.question('Enter resource allocation percentage for panel (1-100, default: 90%
             { key: 'system_cpu_cores', value: JSON.stringify(cpuCores) },
             { key: 'system_total_ram', value: JSON.stringify(totalRamMB) },
             { key: 'system_total_disk', value: JSON.stringify(totalDiskMB) },
-            { key: 'defaultRam', value: JSON.stringify(defaultRam) },
-            { key: 'defaultCpu', value: JSON.stringify(defaultCpu) },
-            { key: 'defaultDisk', value: JSON.stringify(defaultDisk) },
-            { key: 'allocationPercent', value: JSON.stringify(percent) }
+            { key: 'defaultRam', value: JSON.stringify(allocatedRam) },
+            { key: 'defaultCpu', value: JSON.stringify(allocatedCpu) },
+            { key: 'defaultDisk', value: JSON.stringify(allocatedDisk) }
         ];
 
         let completed = 0;
@@ -103,7 +135,7 @@ rl.question('Enter resource allocation percentage for panel (1-100, default: 90%
                     }
                     completed++;
                     if (completed === settings.length) {
-                        console.log('✅ Hardware profiles saved to panel database settings.');
+                        console.log('✅ Custom hardware profiles saved to panel database settings.');
                         db.close(() => {
                             console.log('Database connection closed.');
                             rl.close();
@@ -114,4 +146,6 @@ rl.question('Enter resource allocation percentage for panel (1-100, default: 90%
             );
         });
     });
-});
+}
+
+startDetection();
