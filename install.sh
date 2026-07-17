@@ -77,7 +77,7 @@ cd "$INSTALL_DIR"
 npm install --production
 
 # Step 6: Configure Environment Variables
-echo -e "\n${BLUE}[6/7] Generating configuration...${NC}"
+echo -e "\n${BLUE}[6/7] Generating configuration & running hardware autodetect...${NC}"
 SESSION_SECRET=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32 ; echo '')
 cat <<EOT > .env
 PORT=3000
@@ -85,6 +85,9 @@ SESSION_SECRET=${SESSION_SECRET}
 NODE_ENV=production
 EOT
 echo -e "${GREEN}✓ Configuration saved in .env${NC}"
+
+# Run hardware autodetector to configure database with system specs
+node autodetect.js
 
 # Step 7: Set up PM2 Process Manager
 echo -e "\n${BLUE}[7/7] Configuring PM2 Process Manager...${NC}"
