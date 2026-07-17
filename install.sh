@@ -42,18 +42,19 @@ fi
 
 # Step 1: System Update & Base Utilities
 echo -e "\n${BLUE}[1/7] Updating system and installing base utilities...${NC}"
-apt-get update && apt-get upgrade -y
-apt-get install -y git curl build-essential unzip zip screen libcurl4
+export DEBIAN_FRONTEND=noninteractive
+apt-get update && apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" git curl build-essential unzip zip screen libcurl4
 
 # Step 2: Install Node.js LTS (v20)
 echo -e "\n${BLUE}[2/7] Installing Node.js v20 LTS...${NC}"
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt-get install -y nodejs
+apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" nodejs
 echo -e "${GREEN}✓ Node.js $(node -v) installed successfully.${NC}"
 
 # Step 3: Install Java Runtimes (JDK 17 and JDK 21)
 echo -e "\n${BLUE}[3/7] Installing OpenJDK Java Runtimes (Java 17 & 21)...${NC}"
-apt-get install -y openjdk-17-jre-headless openjdk-21-jre-headless
+apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" openjdk-17-jre-headless openjdk-21-jre-headless
 # Set Java 21 as default (usually preferred for new MC versions)
 update-java-alternatives -s $(update-java-alternatives -l | grep 21 | awk '{print $1}' | head -n 1) || true
 echo -e "${GREEN}✓ Default Java version: $(java -version 2>&1 | head -n 1)${NC}"
