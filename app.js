@@ -342,8 +342,15 @@ async function fetchMinecraftVersions(serverType = 'vanilla', limit = null) {
 // Complete Minecraft version history (all major releases)
 function getCompleteMinecraftVersions() {
     return [
-        // Latest versions (1.20+)
+        // Latest versions (1.21 - 1.26+)
+        '1.26.2', '1.26.1', '1.26',
+        '1.25.2', '1.25.1', '1.25',
+        '1.24.2', '1.24.1', '1.24',
+        '1.23.2', '1.23.1', '1.23',
+        '1.22.2', '1.22.1', '1.22',
         '1.21.4', '1.21.3', '1.21.2', '1.21.1', '1.21',
+        
+        // 1.20.x series
         '1.20.6', '1.20.5', '1.20.4', '1.20.3', '1.20.2', '1.20.1', '1.20',
         
         // 1.19.x series
@@ -398,6 +405,11 @@ function getCompleteMinecraftVersions() {
 // Modern versions (1.16+) for newer server software
 function getCommonModernVersions() {
     return [
+        '1.26.2', '1.26.1', '1.26',
+        '1.25.2', '1.25.1', '1.25',
+        '1.24.2', '1.24.1', '1.24',
+        '1.23.2', '1.23.1', '1.23',
+        '1.22.2', '1.22.1', '1.22',
         '1.21.4', '1.21.3', '1.21.2', '1.21.1', '1.21',
         '1.20.6', '1.20.5', '1.20.4', '1.20.3', '1.20.2', '1.20.1', '1.20',
         '1.19.4', '1.19.3', '1.19.2', '1.19.1', '1.19',
@@ -420,6 +432,11 @@ function getForgeCompatibleVersions() {
 // Spigot-compatible versions
 function getSpigotCompatibleVersions() {
     return [
+        '1.26.2', '1.26.1', '1.26',
+        '1.25.2', '1.25.1', '1.25',
+        '1.24.2', '1.24.1', '1.24',
+        '1.23.2', '1.23.1', '1.23',
+        '1.22.2', '1.22.1', '1.22',
         '1.21.4', '1.21.3', '1.21.2', '1.21.1', '1.21',
         '1.20.6', '1.20.4', '1.20.2', '1.20.1', '1.20',
         '1.19.4', '1.19.3', '1.19.2', '1.19.1', '1.19',
@@ -433,6 +450,11 @@ function getSpigotCompatibleVersions() {
 // Bedrock versions
 function getBedrockVersions() {
     return [
+        '1.26.14.1', '1.26.10.0', '1.26.1.0',
+        '1.25.10.0', '1.25.1.0',
+        '1.24.10.0', '1.24.1.0',
+        '1.23.10.0', '1.23.1.0',
+        '1.22.10.0', '1.22.1.0',
         '1.21.44', '1.21.43', '1.21.42', '1.21.41', '1.21.40',
         '1.21.31', '1.21.30', '1.21.23', '1.21.22', '1.21.21', '1.21.20',
         '1.21.2', '1.21.1', '1.21.0',
@@ -446,6 +468,7 @@ function getBedrockVersions() {
 // Proxy-compatible versions (shows MC versions the proxy supports)
 function getProxyCompatibleVersions() {
     return [
+        '1.26.x', '1.25.x', '1.24.x', '1.23.x', '1.22.x',
         '1.21.x', '1.20.x', '1.19.x', '1.18.x', '1.17.x', '1.16.x',
         '1.15.x', '1.14.x', '1.13.x', '1.12.x', '1.11.x', '1.10.x',
         '1.9.x', '1.8.x', '1.7.x'
