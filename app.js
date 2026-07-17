@@ -82,8 +82,8 @@ const SERVER_SOFTWARE = {
         category: 'Java Edition',
         icon: 'fas fa-scroll',
         color: '#2196F3',
-        downloadUrl: 'https://api.papermc.io/v2/projects/paper/versions/{version}/builds/{build}/downloads/paper-{version}-{build}.jar',
-        manifestUrl: 'https://api.papermc.io/v2/projects/paper',
+        downloadUrl: 'https://fill.papermc.io/v3/projects/paper/versions/{version}/builds/{build}/downloads/paper-{version}-{build}.jar',
+        manifestUrl: 'https://fill.papermc.io/v3/projects/paper',
         supports: ['plugins: true', 'mods: false', 'datapacks: true']
     },
     purpur: {
@@ -154,8 +154,8 @@ const SERVER_SOFTWARE = {
         category: 'Proxy Servers',
         icon: 'fas fa-rocket',
         color: '#00BCD4',
-        downloadUrl: 'https://api.papermc.io/v2/projects/velocity/versions/{version}/builds/{build}/downloads/velocity-{version}-{build}.jar',
-        manifestUrl: 'https://api.papermc.io/v2/projects/velocity',
+        downloadUrl: 'https://fill.papermc.io/v3/projects/velocity/versions/{version}/builds/{build}/downloads/velocity-{version}-{build}.jar',
+        manifestUrl: 'https://fill.papermc.io/v3/projects/velocity',
         supports: ['plugins: true', 'networks: true', 'modern: true']
     },
     bungeecord: {
@@ -174,8 +174,8 @@ const SERVER_SOFTWARE = {
         category: 'Proxy Servers',
         icon: 'fas fa-water',
         color: '#2196F3',
-        downloadUrl: 'https://api.papermc.io/v2/projects/waterfall/versions/{version}/builds/{build}/downloads/waterfall-{version}-{build}.jar',
-        manifestUrl: 'https://api.papermc.io/v2/projects/waterfall',
+        downloadUrl: 'https://fill.papermc.io/v3/projects/waterfall/versions/{version}/builds/{build}/downloads/waterfall-{version}-{build}.jar',
+        manifestUrl: 'https://fill.papermc.io/v3/projects/waterfall',
         supports: ['plugins: true', 'networks: true', 'optimized: true']
     },
     
@@ -247,8 +247,12 @@ async function fetchMinecraftVersions(serverType = 'vanilla', limit = null) {
             case 'waterfall':
             case 'velocity':
                 try {
-                    const paperResponse = await axios.get(software.manifestUrl, { timeout: 10000 });
-                    versions = paperResponse.data.versions.reverse(); // Latest first
+                    const paperResponse = await axios.get(software.manifestUrl, { 
+                        timeout: 10000,
+                        headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+                    });
+                    const versionsData = paperResponse.data.versions || {};
+                    versions = Object.values(versionsData).flat();
                 } catch (err) {
                     console.error(`Error fetching ${serverType} versions:`, err.message);
                     versions = getCommonModernVersions();
@@ -3079,17 +3083,26 @@ async function downloadServerJar(serverType, version, dir) {
                 const manifestRes = await axios.get('https://launchermeta.mojang.com/mc/game/version_manifest.json');
                 actualVersion = manifestRes.data.latest.release;
             } else if (serverType === 'paper') {
-                const res = await axios.get('https://api.papermc.io/v2/projects/paper');
-                actualVersion = res.data.versions[res.data.versions.length - 1];
+                const res = await axios.get('https://fill.papermc.io/v3/projects/paper', {
+                    headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+                });
+                const flatVersions = Object.values(res.data.versions || {}).flat();
+                actualVersion = flatVersions[0];
             } else if (serverType === 'purpur') {
                 const res = await axios.get('https://api.purpurmc.org/v2/purpur');
                 actualVersion = res.data.versions[res.data.versions.length - 1];
             } else if (serverType === 'velocity') {
-                const res = await axios.get('https://api.papermc.io/v2/projects/velocity');
-                actualVersion = res.data.versions[res.data.versions.length - 1];
+                const res = await axios.get('https://fill.papermc.io/v3/projects/velocity', {
+                    headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+                });
+                const flatVersions = Object.values(res.data.versions || {}).flat();
+                actualVersion = flatVersions[0];
             } else if (serverType === 'waterfall') {
-                const res = await axios.get('https://api.papermc.io/v2/projects/waterfall');
-                actualVersion = res.data.versions[res.data.versions.length - 1];
+                const res = await axios.get('https://fill.papermc.io/v3/projects/waterfall', {
+                    headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+                });
+                const flatVersions = Object.values(res.data.versions || {}).flat();
+                actualVersion = flatVersions[0];
             } else if (serverType === 'bungeecord') {
                 actualVersion = 'latest'; // BungeeCord uses latest build
             }
@@ -3103,9 +3116,14 @@ async function downloadServerJar(serverType, version, dir) {
             const verJsonRes = await axios.get(ver.url);
             url = verJsonRes.data.downloads.server.url;
         } else if (serverType === 'paper') {
-            const buildsRes = await axios.get(`https://api.papermc.io/v2/projects/paper/versions/${actualVersion}/builds`);
-            const build = buildsRes.data.builds[buildsRes.data.builds.length - 1];
-            url = `https://api.papermc.io/v2/projects/paper/versions/${actualVersion}/builds/${build.build}/downloads/paper-${actualVersion}-${build.build}.jar`;
+            const buildsRes = await axios.get(`https://fill.papermc.io/v3/projects/paper/versions/${actualVersion}/builds`, {
+                headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+            });
+            const builds = buildsRes.data || [];
+            const stableBuilds = builds.filter(b => b.channel === 'STABLE');
+            const build = stableBuilds.length > 0 ? stableBuilds[stableBuilds.length - 1] : builds[builds.length - 1];
+            if (!build) throw new Error(`No builds found for paper version ${actualVersion}`);
+            url = build.downloads['server:default']?.url;
         } else if (serverType === 'purpur') {
             const latestBuildRes = await axios.get(`https://api.purpurmc.org/v2/purpur/${actualVersion}/latest`);
             const build = latestBuildRes.data.build;
@@ -3121,13 +3139,23 @@ async function downloadServerJar(serverType, version, dir) {
             // Forge installer
             url = `https://maven.minecraftforge.net/net/minecraftforge/forge/${actualVersion}/forge-${actualVersion}-installer.jar`;
         } else if (serverType === 'velocity') {
-            const buildsRes = await axios.get(`https://api.papermc.io/v2/projects/velocity/versions/${actualVersion}/builds`);
-            const build = buildsRes.data.builds[buildsRes.data.builds.length - 1];
-            url = `https://api.papermc.io/v2/projects/velocity/versions/${actualVersion}/builds/${build.build}/downloads/velocity-${actualVersion}-${build.build}.jar`;
+            const buildsRes = await axios.get(`https://fill.papermc.io/v3/projects/velocity/versions/${actualVersion}/builds`, {
+                headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+            });
+            const builds = buildsRes.data || [];
+            const stableBuilds = builds.filter(b => b.channel === 'STABLE' || b.channel === 'RECOMMENDED');
+            const build = stableBuilds.length > 0 ? stableBuilds[stableBuilds.length - 1] : builds[builds.length - 1];
+            if (!build) throw new Error(`No builds found for velocity version ${actualVersion}`);
+            url = build.downloads['server:default']?.url;
         } else if (serverType === 'waterfall') {
-            const buildsRes = await axios.get(`https://api.papermc.io/v2/projects/waterfall/versions/${actualVersion}/builds`);
-            const build = buildsRes.data.builds[buildsRes.data.builds.length - 1];
-            url = `https://api.papermc.io/v2/projects/waterfall/versions/${actualVersion}/builds/${build.build}/downloads/waterfall-${actualVersion}-${build.build}.jar`;
+            const buildsRes = await axios.get(`https://fill.papermc.io/v3/projects/waterfall/versions/${actualVersion}/builds`, {
+                headers: { 'User-Agent': 'Minecraft-Server-Panel/1.0.0 (contact@vredits55-png.github.io)' }
+            });
+            const builds = buildsRes.data || [];
+            const stableBuilds = builds.filter(b => b.channel === 'STABLE');
+            const build = stableBuilds.length > 0 ? stableBuilds[stableBuilds.length - 1] : builds[builds.length - 1];
+            if (!build) throw new Error(`No builds found for waterfall version ${actualVersion}`);
+            url = build.downloads['server:default']?.url;
         } else if (serverType === 'bungeecord') {
             url = 'https://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/bootstrap/target/BungeeCord.jar';
         } else if (serverType === 'bedrock') {
