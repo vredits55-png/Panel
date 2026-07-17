@@ -39,12 +39,17 @@ const cpuCores = os.cpus().length;
 const totalRamMB = Math.floor(os.totalmem() / 1024 / 1024);
 const totalDiskMB = getDiskSpaceMB();
 
+// Calculate 90% allocations (leaving 10% for host system running safely)
+const defaultRam = Math.floor(totalRamMB * 0.9);
+const defaultCpu = Math.max(1, Math.floor(cpuCores * 0.9));
+const defaultDisk = Math.floor(totalDiskMB * 0.9);
+
 console.log('=========================================================');
-console.log('🤖 System Hardware Autodetector');
+console.log('🤖 System Hardware Autodetector (90% Allocation Active)');
 console.log('=========================================================');
-console.log(`🖥️  CPU Cores:  ${cpuCores}`);
-console.log(`💾 Total RAM:  ${Math.round(totalRamMB / 1024)} GB (${totalRamMB} MB)`);
-console.log(`📁 Disk Space: ${Math.round(totalDiskMB / 1024)} GB (${totalDiskMB} MB)`);
+console.log(`🖥️  Host CPU Cores:  ${cpuCores} (Allocated: ${defaultCpu})`);
+console.log(`💾 Host Total RAM:  ${Math.round(totalRamMB / 1024)} GB (Allocated: ${Math.round(defaultRam / 1024)} GB / ${defaultRam} MB)`);
+console.log(`📁 Host Disk Space: ${Math.round(totalDiskMB / 1024)} GB (Allocated: ${Math.round(defaultDisk / 1024)} GB / ${defaultDisk} MB)`);
 console.log('=========================================================');
 
 db.serialize(() => {
@@ -60,7 +65,9 @@ db.serialize(() => {
         { key: 'system_cpu_cores', value: JSON.stringify(cpuCores) },
         { key: 'system_total_ram', value: JSON.stringify(totalRamMB) },
         { key: 'system_total_disk', value: JSON.stringify(totalDiskMB) },
-        { key: 'defaultRam', value: JSON.stringify(Math.min(4096, Math.floor(totalRamMB * 0.5))) } // Default server RAM allocation to 50% (max 4GB)
+        { key: 'defaultRam', value: JSON.stringify(defaultRam) }, // Set default server RAM to 90%
+        { key: 'defaultCpu', value: JSON.stringify(defaultCpu) }, // Set default server CPU to 90%
+        { key: 'defaultDisk', value: JSON.stringify(defaultDisk) } // Set default server Disk to 90%
     ];
 
     let completed = 0;
@@ -74,7 +81,7 @@ db.serialize(() => {
                 }
                 completed++;
                 if (completed === settings.length) {
-                    console.log('✅ Hardware profiles saved to panel database settings.');
+                    console.log('✅ Hardware profiles (90% limit) saved to panel database settings.');
                     db.close(() => {
                         console.log('Database connection closed.');
                         process.exit(0);
