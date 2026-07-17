@@ -98,18 +98,22 @@ pm2 startup | tail -n 2 | bash
 pm2 save
 
 # Setup UFW Firewall
-echo -e "\n${YELLOW}Would you like to configure and enable UFW Firewall? (y/n)${NC}"
-read -p "Option: " CONFIRM_UFW
-if [ "$CONFIRM_UFW" = "y" ] || [ "$CONFIRM_UFW" = "Y" ]; then
-    echo -e "${BLUE}Configuring firewall rules...${NC}"
-    ufw allow ssh
-    ufw allow 3000/tcp
-    ufw allow 25565/tcp
-    ufw allow 19132/udp
-    ufw default deny incoming
-    ufw default allow outgoing
-    echo "y" | ufw enable
-    echo -e "${GREEN}✓ Firewall enabled.${NC}"
+if command -v ufw >/dev/null 2>&1; then
+    echo -e "\n${YELLOW}Would you like to configure and enable UFW Firewall? (y/n)${NC}"
+    read -p "Option: " CONFIRM_UFW < /dev/tty
+    if [ "$CONFIRM_UFW" = "y" ] || [ "$CONFIRM_UFW" = "Y" ]; then
+        echo -e "${BLUE}Configuring firewall rules...${NC}"
+        ufw allow ssh
+        ufw allow 3000/tcp
+        ufw allow 25565/tcp
+        ufw allow 19132/udp
+        ufw default deny incoming
+        ufw default allow outgoing
+        echo "y" | ufw enable
+        echo -e "${GREEN}✓ Firewall enabled.${NC}"
+    fi
+else
+    echo -e "\n${YELLOW}Note: UFW Firewall is not installed. Skipping firewall configuration.${NC}"
 fi
 
 # Print Success message
